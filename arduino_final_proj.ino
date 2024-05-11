@@ -135,33 +135,6 @@ void startChoice_1() {
   gfx->setTextColor(blinkState ? WHITE : BLACK, blinkState ? BLACK : WHITE);
 }
 
-// void startChoice_2() {
-//   gfx->setCursor(centerLong, secondLine);
-//   if (choice == 2) {
-//     gfx->setTextColor(BLACK, WHITE);
-//     gfx->print("START AGAIN");
-//     gfx->setTextColor(WHITE, BLACK);
-//   } else {
-//     gfx->setTextColor(WHITE, BLACK);
-//     gfx->print("START AGAIN");
-//     gfx->setTextColor(BLACK, WHITE);
-//   }
-// }
-
-// void startChoice_3() {
-//   gfx->setCursor(centerLong, thirdLine);
-//   if (choice == 3) {
-//     gfx->setTextColor(BLACK, WHITE);
-//     gfx->print("START ????");
-//     gfx->setTextColor(WHITE, BLACK);
-//   } else {
-//     gfx->setTextColor(WHITE, BLACK);
-//     gfx->print("START ????");
-//     gfx->setTextColor(BLACK, WHITE);
-//   }
-// }
-
-
 // MATH GAME
 
 void mathChoiceHandler() {
@@ -205,10 +178,10 @@ void mathChoiceDown() {
 void mathPage() {
   if (!finishedLoading) {
     mathTitleSetter();
+    mathProblemCreator();
     finishedLoading = true;
   }
   mathChoices();
-  mathProblemCreator();
   mathChoiceHandler();
 }
 
@@ -229,11 +202,42 @@ void mathTitleSetter() {
 }
 
 void mathProblemCreator() {
+  int x = random(1, 10);  // Generate a random number between 1 and 10 for x
+  int y = random(1, 10);  // Generate a random number between 1 and 10 for y
+  int z;
+  String problem;
+
+  // Decide randomly whether the problem will be an addition or subtraction problem
+  if (random(0, 2) == 0) {
+    z = x + y;
+    problem = "x + y = z";
+  } else {
+    z = x - y;
+    problem = "x - y = z";
+  }
+
+  // Decide randomly which of the three numbers will be missing
+  switch (random(0, 3)) {
+    case 0:
+      problem.replace("x", "?");
+      problem.replace("y", String(y));
+      problem.replace("z", String(z));
+      break;
+    case 1:
+      problem.replace("x", String(x));
+      problem.replace("y", "?");
+      problem.replace("z", String(z));
+      break;
+    case 2:
+      problem.replace("x", String(x));
+      problem.replace("y", String(y));
+      problem.replace("z", "?");
+      break;
+  }
+
   gfx->setCursor(centerSentence, firstLine);
   gfx->setTextColor(WHITE, BLACK);
-  gfx->print("LEVEL ");
-  gfx->print(difficulty);
-  gfx->print(" PROBLEM");
+  gfx->print(problem);
 }
 
 void mathChoice_1() {
