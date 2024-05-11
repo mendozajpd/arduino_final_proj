@@ -68,7 +68,7 @@ void setup() {
 void loop() {
   // change_choice();
   buttonHandler();
-  Serial.println(difficulty);
+  Serial.println(choice);
   switch (page) {
     case 0:
       startPage();
@@ -165,12 +165,40 @@ void startChoice_1() {
 // MATH GAME
 
 void mathChoiceHandler() {
-  if (buttonPressed1 || buttonPressed2 || buttonPressed3) {
+  mathChoiceAccept();
+  mathChoiceUp();
+  mathChoiceDown();
+}
+
+void mathChoiceAccept() {
+  if (buttonPressed2) {
     difficulty++;
-    buttonPressed1 = false;
     buttonPressed2 = false;
-    buttonPressed3 = false;
     clearScreen();
+  }
+}
+
+void mathChoiceUp() {
+  if (buttonPressed1) {
+    if (choice - 1 == 0) {
+      choice = 5;
+    } else {
+      choice--;
+    }
+    delay(100);
+    buttonPressed1 = false;
+  }
+}
+
+void mathChoiceDown() {
+  if (buttonPressed3) {
+    if (choice + 1 == 6) {
+      choice = 1;
+    } else {
+      choice++;
+    }
+    delay(100);
+    buttonPressed3 = false;
   }
 }
 
@@ -179,7 +207,16 @@ void mathPage() {
     mathTitleSetter();
     finishedLoading = true;
   }
+  mathChoices();
+  mathProblemCreator();
   mathChoiceHandler();
+}
+
+void mathChoices() {
+  mathChoice_1();
+  mathChoice_2();
+  mathChoice_3();
+  clearAccept_choices();
 }
 
 void mathTitleSetter() {
@@ -193,18 +230,72 @@ void mathTitleSetter() {
 
 void mathProblemCreator() {
   gfx->setCursor(centerSentence, firstLine);
-  gfx->setTextColor(blinkState ? BLACK : WHITE, blinkState ? WHITE : BLACK);
-  gfx->print("LEVEL 1 PROBLEM");
-  gfx->setTextColor(blinkState ? WHITE : BLACK, blinkState ? BLACK : WHITE);
+  gfx->setTextColor(WHITE, BLACK);
+  gfx->print("LEVEL ");
+  gfx->print(difficulty);
+  gfx->print(" PROBLEM");
 }
 
-void change_choice() {
-  if (choice + 1 == 4) {
-    choice = 1;
+void mathChoice_1() {
+  if (choice == 1) {
+    gfx->setCursor(centerSmall, secondLine);
+    gfx->setTextColor(BLACK, WHITE);
+    gfx->print("CHOICE 1");
   } else {
-    choice++;
+    gfx->setCursor(centerSmall, secondLine);
+    gfx->setTextColor(WHITE, BLACK);
+    gfx->print("CHOICE 1");
   }
-  delay(1000);
+}
+
+void mathChoice_2() {
+  if (choice == 2) {
+    gfx->setCursor(centerSmall, thirdLine);
+    gfx->setTextColor(BLACK, WHITE);
+    gfx->print("CHOICE 2");
+  } else {
+    gfx->setCursor(centerSmall, thirdLine);
+    gfx->setTextColor(WHITE, BLACK);
+    gfx->print("CHOICE 2");
+  }
+}
+
+void mathChoice_3() {
+  if (choice == 3) {
+    gfx->setCursor(centerSmall, fourthLine);
+    gfx->setTextColor(BLACK, WHITE);
+    gfx->print("CHOICE 3");
+  } else {
+    gfx->setCursor(centerSmall, fourthLine);
+    gfx->setTextColor(WHITE, BLACK);
+    gfx->print("CHOICE 3");
+  }
+}
+
+void clearAccept_choices() {
+  if (choice == 4) {
+    gfx->setCursor(centerSentence, fifthLine);
+    gfx->setTextColor(BLACK, WHITE);
+    gfx->print("CLEAR");
+    gfx->setTextColor(WHITE, BLACK);
+    gfx->print("         ");
+    gfx->print("ACCEPT");
+    gfx->setTextColor(WHITE, BLACK);
+  } else if (choice == 5) {
+    gfx->setCursor(centerSentence, fifthLine);
+    gfx->setTextColor(WHITE, BLACK);
+    gfx->print("CLEAR");
+    gfx->print("         ");
+    gfx->setTextColor(BLACK, WHITE);
+    gfx->print("ACCEPT");
+    gfx->setTextColor(WHITE, BLACK);
+  } else {
+    gfx->setCursor(centerSentence, fifthLine);
+    gfx->setTextColor(WHITE, BLACK);
+    gfx->print("CLEAR");
+    gfx->print("         ");
+    gfx->print("ACCEPT");
+  }
 }
 
 
@@ -218,5 +309,6 @@ void countBlink() {
 
 void clearScreen() {
   gfx->fillScreen(BLACK);
+  choice = 1;
   finishedLoading = false;
 }
