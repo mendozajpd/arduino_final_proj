@@ -10,6 +10,7 @@ int choice = 0;
 int page = 0;
 // 0 = MENU
 // 1 = GAME
+// 2 = GAMEOVER
 
 
 // Set to 0 when changing, set to 1 after its done
@@ -29,10 +30,15 @@ int fifthLine = 160;
 
 // Blink
 bool blinkState = false;
+bool blinkStateFast = false;
 
 // Millis Counters
 unsigned long previousMillis = 0;
 unsigned long millisLoop = 750;
+unsigned long previousMillisFast = 0;
+unsigned long millisLoopFast = 100;
+unsigned long countDownTime = 0;
+unsigned long second = 1000;
 
 // Button
 int buttonPin1 = 2;
@@ -48,6 +54,20 @@ int buttonPressed3 = false;
 
 // GAME STATES
 int difficulty = 1;
+int timeLeft;
+int beginningTime = 15;
+int x;
+int y;
+int z;
+
+int answer;
+int choiceAnswer;
+int choiceRandom1;
+int choiceRandom2;
+int choiceRandom3;
+
+int score;
+int previousScore;
 
 
 void setup() {
@@ -56,6 +76,7 @@ void setup() {
   pinMode(buttonPin1, INPUT);
   pinMode(buttonPin2, INPUT);
   pinMode(buttonPin3, INPUT);
+  randomSeed(analogRead(0));
 
   gfx->begin();
   gfx->fillScreen(BLACK);
@@ -68,7 +89,6 @@ void setup() {
 void loop() {
   // change_choice();
   buttonHandler();
-  Serial.println(choice);
   switch (page) {
     case 0:
       startPage();
@@ -76,10 +96,14 @@ void loop() {
     case 1:
       mathPage();
       break;
+    case 2:
+      gameOverPage();
+      break;
     default:
       break;
   }
   countBlink();
+  countBlinkFast();
 }
 
 void buttonHandler() {
@@ -112,10 +136,12 @@ void buttonHandler3() {
 }
 
 // START STATE
-void startChoiceHandler() {
+void startGameHandler() {
   if (buttonPressed1 || buttonPressed2 || buttonPressed3) {
     clearScreen();
     page = 1;
+    timeLeft = beginningTime;
+    score = 0;
     buttonPressed1 = false;
     buttonPressed2 = false;
     buttonPressed3 = false;
@@ -125,7 +151,7 @@ void startChoiceHandler() {
 
 void startPage() {
   startChoice_1();
-  startChoiceHandler();
+  startGameHandler();
 }
 
 void startChoice_1() {
@@ -145,7 +171,32 @@ void mathChoiceHandler() {
 
 void mathChoiceAccept() {
   if (buttonPressed2) {
-    difficulty++;
+    if (choice == choiceAnswer) {
+      difficulty++;
+      gfx->setCursor(centerSentence, firstLine - 40);
+      gfx->setTextColor(GREEN, BLACK);
+      gfx->print("CORRECT!");
+      gfx->setCursor(centerSentence, firstLine - 20);
+      gfx->print("+5 TIME");
+      gfx->setTextColor(WHITE, BLACK);
+      timeLeft += 5;
+      score = score + difficulty + timeLeft;
+      delay(500);
+    } else {
+      gfx->setCursor(centerSentence, firstLine - 40);
+      gfx->setTextColor(RED, BLACK);
+      gfx->print("WRONG");
+      gfx->setCursor(centerSentence, firstLine - 20);
+      gfx->print("-3 TIME");
+      gfx->setTextColor(WHITE, BLACK);
+      if (timeLeft - 3 <= 0) {
+        timeLeft = 0;
+        gameOverHandler();
+      } else {
+        timeLeft -= 3;
+      }
+      delay(500);
+    }
     buttonPressed2 = false;
     clearScreen();
   }
@@ -154,7 +205,7 @@ void mathChoiceAccept() {
 void mathChoiceUp() {
   if (buttonPressed1) {
     if (choice - 1 == 0) {
-      choice = 5;
+      choice = 3;
     } else {
       choice--;
     }
@@ -165,7 +216,7 @@ void mathChoiceUp() {
 
 void mathChoiceDown() {
   if (buttonPressed3) {
-    if (choice + 1 == 6) {
+    if (choice + 1 == 4) {
       choice = 1;
     } else {
       choice++;
@@ -181,19 +232,30 @@ void mathPage() {
     mathProblemCreator();
     finishedLoading = true;
   }
+  scoreHandler();
   mathChoices();
   mathChoiceHandler();
+  countdownHandler();
+  if (timeLeft <= 0) {
+    gameOverHandler();
+  }
+}
+
+void gameOverHandler() {
+  clearScreen();
+  finishedLoading = false;
+  page = 2;
 }
 
 void mathChoices() {
   mathChoice_1();
   mathChoice_2();
   mathChoice_3();
-  clearAccept_choices();
+  timerHandler();
 }
 
 void mathTitleSetter() {
-  gfx->setCursor(titleLine, titleCenter);
+  gfx->setCursor(0, titleCenter);
   gfx->setTextColor(WHITE);
   gfx->print(" LEVEL ");
   gfx->print(difficulty);
@@ -202,9 +264,9 @@ void mathTitleSetter() {
 }
 
 void mathProblemCreator() {
-  int x = random(1, 10);  // Generate a random number between 1 and 10 for x
-  int y = random(1, 10);  // Generate a random number between 1 and 10 for y
-  int z;
+  x = random(1, 10 + difficulty);  // Generate a random number between 1 and 10 for x
+  y = random(1, 10 + difficulty);  // Generate a random number between 1 and 10 for y
+  z;
   String problem;
 
   // Decide randomly whether the problem will be an addition or subtraction problem
@@ -222,18 +284,28 @@ void mathProblemCreator() {
       problem.replace("x", "?");
       problem.replace("y", String(y));
       problem.replace("z", String(z));
+      answer = x;
+      choiceAnswer = 1;
       break;
     case 1:
       problem.replace("x", String(x));
       problem.replace("y", "?");
       problem.replace("z", String(z));
+      answer = y;
+      choiceAnswer = 2;
       break;
     case 2:
       problem.replace("x", String(x));
       problem.replace("y", String(y));
-      problem.replace("z", "?");
+      problem.replace("z", "?   ");
+      choiceAnswer = 3;
+      answer = z;
       break;
   }
+
+  choiceRandom1 = random(1, 10) * (random(0, 2) == 0 ? -1 : 1);
+  choiceRandom2 = random(1, 10) * (random(0, 2) == 0 ? -1 : 1);
+  choiceRandom3 = random(1, 10) * (random(0, 2) == 0 ? -1 : 1);
 
   gfx->setCursor(centerSentence, firstLine);
   gfx->setTextColor(WHITE, BLACK);
@@ -241,73 +313,134 @@ void mathProblemCreator() {
 }
 
 void mathChoice_1() {
-  if (choice == 1) {
-    gfx->setCursor(centerSmall, secondLine);
-    gfx->setTextColor(BLACK, WHITE);
-    gfx->print("CHOICE 1");
-  } else {
-    gfx->setCursor(centerSmall, secondLine);
-    gfx->setTextColor(WHITE, BLACK);
-    gfx->print("CHOICE 1");
+  int displayAnswer = answer;
+  if (choiceAnswer != 1) {
+    displayAnswer = displayAnswer + choiceRandom1;
   }
+
+  gfx->setCursor(centerSmall, secondLine);
+  gfx->setTextColor(choice == 1 ? BLACK : WHITE, choice == 1 ? WHITE : BLACK);
+  gfx->print(displayAnswer);
+  gfx->setTextColor(WHITE, BLACK);
+  gfx->print("   ");
 }
 
 void mathChoice_2() {
-  if (choice == 2) {
-    gfx->setCursor(centerSmall, thirdLine);
-    gfx->setTextColor(BLACK, WHITE);
-    gfx->print("CHOICE 2");
-  } else {
-    gfx->setCursor(centerSmall, thirdLine);
-    gfx->setTextColor(WHITE, BLACK);
-    gfx->print("CHOICE 2");
+  int displayAnswer = answer;
+  if (choiceAnswer != 2) {
+    displayAnswer = displayAnswer + choiceRandom2;
   }
+
+  gfx->setCursor(centerSmall, thirdLine);
+  gfx->setTextColor(choice == 2 ? BLACK : WHITE, choice == 2 ? WHITE : BLACK);
+  gfx->print(displayAnswer);
+  gfx->setTextColor(WHITE, BLACK);
+  gfx->print("   ");
 }
 
 void mathChoice_3() {
-  if (choice == 3) {
-    gfx->setCursor(centerSmall, fourthLine);
-    gfx->setTextColor(BLACK, WHITE);
-    gfx->print("CHOICE 3");
-  } else {
-    gfx->setCursor(centerSmall, fourthLine);
+  int displayAnswer = answer;
+  if (choiceAnswer != 3) {
+    displayAnswer = displayAnswer + choiceRandom3;
+  }
+
+  gfx->setCursor(centerSmall, fourthLine);
+  gfx->setTextColor(choice == 3 ? BLACK : WHITE, choice == 3 ? WHITE : BLACK);
+  gfx->print(displayAnswer);
+  gfx->setTextColor(WHITE, BLACK);
+  gfx->print("   ");
+}
+
+void timerHandler() {
+  gfx->setCursor(centerSentence, titleCenter);
+  if (timeLeft < 10 && timeLeft >= 5) {
     gfx->setTextColor(WHITE, BLACK);
-    gfx->print("CHOICE 3");
+    gfx->print("TIME LEFT: ");
+    gfx->setTextColor(RED, BLACK);
+    gfx->print(timeLeft);
+    gfx->print(" ");
+    gfx->setTextColor(WHITE, BLACK);
+  } else if (timeLeft < 5) {
+    gfx->setTextColor(WHITE, BLACK);
+    gfx->print("TIME LEFT: ");
+    gfx->setTextColor(blinkStateFast ? RED : WHITE, BLACK);
+    gfx->print(timeLeft);
+    gfx->setTextColor(WHITE, BLACK);
+    gfx->print(" ");
+    gfx->setTextColor(WHITE, BLACK);
+  } else {
+    gfx->setTextColor(WHITE, BLACK);
+    gfx->print("TIME LEFT: ");
+    gfx->print(timeLeft);
+    gfx->print(" ");
   }
 }
 
-void clearAccept_choices() {
-  if (choice == 4) {
-    gfx->setCursor(centerSentence, fifthLine);
-    gfx->setTextColor(BLACK, WHITE);
-    gfx->print("CLEAR");
-    gfx->setTextColor(WHITE, BLACK);
-    gfx->print("         ");
-    gfx->print("ACCEPT");
-    gfx->setTextColor(WHITE, BLACK);
-  } else if (choice == 5) {
-    gfx->setCursor(centerSentence, fifthLine);
-    gfx->setTextColor(WHITE, BLACK);
-    gfx->print("CLEAR");
-    gfx->print("         ");
-    gfx->setTextColor(BLACK, WHITE);
-    gfx->print("ACCEPT");
-    gfx->setTextColor(WHITE, BLACK);
-  } else {
-    gfx->setCursor(centerSentence, fifthLine);
-    gfx->setTextColor(WHITE, BLACK);
-    gfx->print("CLEAR");
-    gfx->print("         ");
-    gfx->print("ACCEPT");
-  }
+void scoreHandler() {
+  gfx->setCursor(centerSentence + 150, titleCenter);
+  gfx->setTextColor(WHITE, BLACK);
+  gfx->print("SCORE: ");
+  gfx->print(score);
+  gfx->print(" ");
 }
 
+// GAME OVER
+void gameOverPage() {
+  gameOverChoice_1();
+  startGameHandler();
+}
+
+void gameOverChoice_1() {
+  if (!finishedLoading) {
+    if (score > previousScore) {
+      gfx->setCursor(centerSentence, 10);
+      gfx->setTextColor(WHITE, BLACK);
+      gfx->print("CONGRATULATIONS!!! ");
+      gfx->setCursor(centerSentence, 30);
+      gfx->print("NEW HIGH SCORE: ");
+      gfx->print(score);
+      previousScore = score;
+    } else {
+      gfx->setCursor(centerSentence, 10);
+      gfx->setTextColor(WHITE, BLACK);
+      gfx->print("HIGH SCORE: ");
+      gfx->print(previousScore);
+      gfx->setCursor(centerSentence, 30);
+      gfx->print("SCORE: ");
+      gfx->print(score);
+    }
+    finishedLoading = true;
+  }
+
+  gfx->setCursor(centerSentence, firstLine);
+  gfx->setTextColor(blinkState ? BLACK : WHITE, blinkState ? WHITE : BLACK);
+  gfx->print("PRESS ANY BUTTON TO PLAY AGAIN");
+  gfx->setTextColor(blinkState ? WHITE : BLACK, blinkState ? BLACK : WHITE);
+}
 
 void countBlink() {
   unsigned long currentMillis = millis();
   if (currentMillis - previousMillis >= millisLoop) {
     previousMillis = currentMillis;
     blinkState = !blinkState;
+  }
+}
+
+void countBlinkFast() {
+  unsigned long currentMillis = millis();
+  if (currentMillis - previousMillisFast >= millisLoopFast) {
+    previousMillisFast = currentMillis;
+    blinkStateFast = !blinkStateFast;
+  }
+}
+
+void countdownHandler() {
+  unsigned long currentMillis = millis();
+  if (currentMillis - countDownTime >= second) {
+    countDownTime = currentMillis;
+    if (timeLeft > 0) {
+      timeLeft--;
+    }
   }
 }
 
