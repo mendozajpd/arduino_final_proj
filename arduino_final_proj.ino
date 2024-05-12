@@ -142,6 +142,7 @@ void startGameHandler() {
     page = 1;
     timeLeft = beginningTime;
     score = 0;
+    difficulty = 1;
     buttonPressed1 = false;
     buttonPressed2 = false;
     buttonPressed3 = false;
@@ -399,6 +400,9 @@ void gameOverChoice_1() {
       gfx->setCursor(centerSentence, 30);
       gfx->print("NEW HIGH SCORE: ");
       gfx->print(score);
+      gfx->setCursor(centerSentence, 50);
+      gfx->print("LVL: ");
+      gfx->print(difficulty);
       previousScore = score;
     } else {
       gfx->setCursor(centerSentence, 10);
@@ -408,11 +412,14 @@ void gameOverChoice_1() {
       gfx->setCursor(centerSentence, 30);
       gfx->print("SCORE: ");
       gfx->print(score);
+      gfx->setCursor(centerSentence, 50);
+      gfx->print("LVL: ");
+      gfx->print(difficulty);
     }
     finishedLoading = true;
   }
 
-  gfx->setCursor(centerSentence, firstLine);
+  gfx->setCursor(centerSentence, secondLine);
   gfx->setTextColor(blinkState ? BLACK : WHITE, blinkState ? WHITE : BLACK);
   gfx->print("PRESS ANY BUTTON TO PLAY AGAIN");
   gfx->setTextColor(blinkState ? WHITE : BLACK, blinkState ? BLACK : WHITE);
