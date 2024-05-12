@@ -80,7 +80,7 @@ void setup() {
 
   gfx->begin();
   gfx->fillScreen(BLACK);
-  gfx->setCursor(titleLine, titleCenter);
+  gfx->setCursor(titleLine, firstLine);
   gfx->setTextColor(WHITE);
   gfx->println("MATH MASTERMIND!!");
   gfx->setTextColor(WHITE, BLACK);
@@ -156,7 +156,7 @@ void startPage() {
 }
 
 void startChoice_1() {
-  gfx->setCursor(centerSentence, firstLine);
+  gfx->setCursor(centerSentence, thirdLine);
   gfx->setTextColor(blinkState ? BLACK : WHITE, blinkState ? WHITE : BLACK);
   gfx->print("PRESS ANY BUTTON TO START");
   gfx->setTextColor(blinkState ? WHITE : BLACK, blinkState ? BLACK : WHITE);
@@ -419,7 +419,7 @@ void gameOverChoice_1() {
     finishedLoading = true;
   }
 
-  gfx->setCursor(centerSentence, secondLine);
+  gfx->setCursor(centerSentence, thirdLine);
   gfx->setTextColor(blinkState ? BLACK : WHITE, blinkState ? WHITE : BLACK);
   gfx->print("PRESS ANY BUTTON TO PLAY AGAIN");
   gfx->setTextColor(blinkState ? WHITE : BLACK, blinkState ? BLACK : WHITE);
