@@ -7,6 +7,9 @@ Arduino_GFX *gfx = new Arduino_ILI9341(
 
 int choice = 0;
 
+// SPEAKER
+int buzzPin = 5;
+
 int page = 0;
 // 0 = MENU
 // 1 = GAME
@@ -35,8 +38,10 @@ bool blinkStateFast = false;
 // Millis Counters
 unsigned long previousMillis = 0;
 unsigned long millisLoop = 750;
+
 unsigned long previousMillisFast = 0;
 unsigned long millisLoopFast = 100;
+
 unsigned long countDownTime = 0;
 unsigned long second = 1000;
 
@@ -79,11 +84,14 @@ void setup() {
   randomSeed(analogRead(0));
 
   gfx->begin();
-  gfx->fillScreen(BLACK);
+  gfx->fillScreen(RED);
   gfx->setCursor(titleLine, firstLine);
   gfx->setTextColor(WHITE);
   gfx->println("MATH MASTERMIND!!");
   gfx->setTextColor(WHITE, BLACK);
+
+  // SPEAKER
+  pinMode(buzzPin, OUTPUT);
 }
 
 void loop() {
@@ -138,6 +146,7 @@ void buttonHandler3() {
 // START STATE
 void startGameHandler() {
   if (buttonPressed1 || buttonPressed2 || buttonPressed3) {
+    pressButtonTone();
     clearScreen();
     page = 1;
     timeLeft = beginningTime;
@@ -146,7 +155,19 @@ void startGameHandler() {
     buttonPressed1 = false;
     buttonPressed2 = false;
     buttonPressed3 = false;
+
+    startTone();
   }
+}
+
+void startTone() {
+  tone(buzzPin, 400);
+  delay(150);
+  tone(buzzPin, 500);
+  delay(150);
+  tone(buzzPin, 800);
+  delay(300);
+  noTone(buzzPin);
 }
 
 
@@ -182,7 +203,10 @@ void mathChoiceAccept() {
       gfx->setTextColor(WHITE, BLACK);
       timeLeft += 5;
       score = score + difficulty + timeLeft;
-      delay(500);
+
+      correctAnswerTone();
+
+      delay(300);
     } else {
       gfx->setCursor(centerSentence, firstLine - 40);
       gfx->setTextColor(RED, BLACK);
@@ -196,11 +220,26 @@ void mathChoiceAccept() {
       } else {
         timeLeft -= 3;
       }
-      delay(500);
+      wrongAnswerTone();
+      delay(300);
     }
     buttonPressed2 = false;
     clearScreen();
   }
+}
+
+void correctAnswerTone() {
+  tone(buzzPin, 600);
+  delay(80);
+  tone(buzzPin, 800);
+  delay(100);
+  noTone(buzzPin);
+}
+
+void wrongAnswerTone() {
+  tone(buzzPin, 300);
+  delay(180);
+  noTone(buzzPin);
 }
 
 void mathChoiceUp() {
@@ -212,6 +251,7 @@ void mathChoiceUp() {
     }
     delay(100);
     buttonPressed1 = false;
+    pressButtonTone();
   }
 }
 
@@ -224,7 +264,14 @@ void mathChoiceDown() {
     }
     delay(100);
     buttonPressed3 = false;
+    pressButtonTone();
   }
+}
+
+void pressButtonTone() {
+  tone(buzzPin, 600);
+  delay(80);
+  noTone(buzzPin);
 }
 
 void mathPage() {
